@@ -3,8 +3,10 @@ import pptk
 import laspy
 import tkinter
 from tkinter import ttk
+import tkinter.filedialog
 import multiprocessing
 import time
+import csv
 
 
 # TODO leyenda con colores
@@ -52,6 +54,7 @@ def read_npy(path):
         np_data = np.load(f)
     return np_data
 
+
 class Annotator(object):
     def __init__(self, button_state, object_classes, path_to_save):
         self.button_state = button_state
@@ -82,10 +85,9 @@ class Annotator(object):
             self.viewer.wait()
             annotation = self.viewer.get("selected")
             n_annotated = len(annotation)
-            print("Annotated %d points." % n_annotated)
 
             button_state = self.button_state.value
-            print(button_state)
+            print(f"Annotated {n_annotated} points as class {button_state}")
             if button_state == -1:
                 save_npy(self.point_colors, self.path_to_save)
                 print('npy saved')
@@ -105,7 +107,7 @@ def launch_annotator(points, point_colors, button_state, object_classes, path_to
     annotator.annotate(points, point_colors)
 
 
-class Gui(object):
+class GuiAnnotator(object):
     def __init__(self, button_state, object_classes):
         self.window = tkinter.Tk()
         self.window.configure(bg='dim gray')
@@ -130,27 +132,63 @@ class Gui(object):
         self.window.mainloop()
 
 
+class GuiImport():
+    def __init__(self):
+        self.window = tkinter.Tk()
+        self.window.configure(bg='dim gray')
+        self.window.title('Recorte')
+        self.window.resizable(0, 0)
+        self.window.pack_slaves()
+
+        self.pc_path = None
+
+        self.boton1 = ttk.Button(self.window, text='Set poitcloud path', padding=(10, 5), command=lambda: self.read_pc_path(self))
+        self.boton2 = ttk.Button(self.window, text='Begin labeling', padding=(10, 5), command=lambda: self.exit(self))
+
+        self.boton1.grid(column=1, row=1, padx=5, pady=5)
+        self.boton2.grid(column=2, row=1, padx=5, pady=5)
+
+        self.window.mainloop()
+
+
+    @staticmethod
+    def read_pc_path(gui):
+        gui.pc_path = tkinter.filedialog.askopenfilename(initialdir="/", title="Select file",
+                                              filetypes=(("PointClouds", "*.laz"), ("PointClouds", "*.npy"),
+                                                         ("PointClouds", "*.pcd"), ("all files", "*.*")))
+
+    @staticmethod
+    def exit(gui):
+        gui.window.destroy()
+
 
 
 if __name__ == '__main__':
-    path_npy = r''
-    path_to_save = r''
+    gui_import = GuiImport()
+    path_out = f'{gui_import.pc_path[:-4]}_label.npy'
+    path_label_definitions = './label_definitions.csv'
 
-    object_classes = ['background', 'class1', 'class2', 'class3']
+    with open(path_label_definitions, 'r') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            # for e in row:
+            label_definitions = row
 
-    X, Y, Z, I = read_npy(path_npy)
 
-    n = 1000000
-    X = X[:n]
-    Y = Y[:n]
-    Z = Z[:n]
-    I = I[:n]
+    X, Y, Z, I = read_npy(gui_import.pc_path)
+
+    # n = 1000000
+    # X = X[:n]
+    # Y = Y[:n]
+    # Z = Z[:n]
+    # I = I[:n]
 
     points = np.stack([X, Y, Z]).T
     point_colors = np.stack([I] * 3).T
 
-    p1 = multiprocessing.Process(target=Gui, args=(button_state, object_classes,))
-    p2 = multiprocessing.Process(target=launch_annotator, args=(points, point_colors, button_state, object_classes, path_to_save,))
+    p1 = multiprocessing.Process(target=GuiAnnotator, args=(button_state, label_definitions,))
+    p2 = multiprocessing.Process(target=launch_annotator, args=(points, point_colors, button_state, label_definitions,
+                                                                path_out,))
     p1.start()
     p2.start()
     p1.join()
