@@ -133,11 +133,10 @@ class Gui(object):
 
 
 if __name__ == '__main__':
-    path_laz = r"D:\Users\Sergio\Downloads/Tile_Y+0000230300_X+0000519000.laz"
-    path_npy = r'D:\Users\Sergio\Desktop/tile.npy'
-    path_to_save = r'D:\Users\Sergio\Desktop/tile_class.npy'
+    path_npy = r''
+    path_to_save = r''
 
-    object_classes = ['background', 'suelofhañliswuhefiaWHUFÑPw', 'rail', 'farola']
+    object_classes = ['background', 'class1', 'class2', 'class3']
 
     X, Y, Z, I = read_npy(path_npy)
 
