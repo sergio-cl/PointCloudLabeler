@@ -33,15 +33,27 @@ def read_laz(path):
     print('.laz loaded')
 
     X, Y, Z, I = laz_file.x, laz_file.y, laz_file.z, laz_file.intensity
-    n = len(X)
-
-    idxs = np.random.permutation(range(n))
-    X = X[idxs] - np.min(X)
-    Y = Y[idxs] - np.min(Y)
-    Z = Z[idxs] - np.min(Z)
-    I = I[idxs] / np.max(I)
-
+   
     return X, Y, Z, I
+
+def read_pc(path, normalize, subset):
+    if path.endswith('.laz'):
+        X, Y, Z, I = read_laz(path)
+    elif path.endswith('.npy'):
+        X, Y, Z, I = read_npy(path)
+    
+    if subset:       
+        idxs = np.random.permutation(range(subset))
+        X = X[idxs]
+        Y = Y[idxs]
+        Z = Z[idxs]
+        I = I[idxs]
+       
+    if normalize:
+        X = X - np.min(X)
+        Y = Y - np.min(Y)
+        Z = Z - np.min(Z)
+        I = I / np.max(I)
 
 
 def save_npy(np_data, path):
@@ -175,7 +187,7 @@ if __name__ == '__main__':
             label_definitions = row
 
 
-    X, Y, Z, I = read_npy(gui_import.pc_path)
+    X, Y, Z, I = read_pc(gui_import.pc_path)
 
     # n = 1000000
     # X = X[:n]
