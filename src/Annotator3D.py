@@ -36,7 +36,7 @@ def read_laz(path):
    
     return X, Y, Z, I
 
-def read_pc(path, normalize, subset):
+def read_pc(path, normalize=None, subset=None):
     if path.endswith('.laz'):
         X, Y, Z, I = read_laz(path)
     elif path.endswith('.npy'):
@@ -54,7 +54,8 @@ def read_pc(path, normalize, subset):
         Y = Y - np.min(Y)
         Z = Z - np.min(Z)
         I = I / np.max(I)
-
+        
+    return X, Y, Z, I
 
 def save_npy(np_data, path):
     with open(path, 'wb') as f:
@@ -186,7 +187,6 @@ if __name__ == '__main__':
             # for e in row:
             label_definitions = row
 
-
     X, Y, Z, I = read_pc(gui_import.pc_path)
 
     # n = 1000000
@@ -204,4 +204,6 @@ if __name__ == '__main__':
     p1.start()
     p2.start()
     p1.join()
+    p2.join()
+
     p2.join()
